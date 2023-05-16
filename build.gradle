@@ -1,0 +1,77 @@
+plugins {
+	id 'org.springframework.boot' version '2.2.5.RELEASE'
+	id 'io.spring.dependency-management' version '1.0.9.RELEASE'
+	id 'java'
+	id 'war'
+}
+
+apply plugin: 'war'
+war {
+    baseName = 'chest'    
+}
+
+group = 'kr.or.chest'
+version = '0.0.1'
+sourceCompatibility = '1.8'
+
+configurations {
+	developmentOnly
+
+	runtimeClasspath {
+		extendsFrom developmentOnly
+	}
+	compileOnly {
+		extendsFrom annotationProcessor
+	}
+}
+
+repositories {
+	mavenCentral()
+}
+
+dependencies {
+	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+	implementation 'org.springframework.boot:spring-boot-starter-web'
+	implementation 'org.mybatis.spring.boot:mybatis-spring-boot-starter:2.1.1'
+	implementation 'org.bgee.log4jdbc-log4j2:log4jdbc-log4j2-jdbc4.1:1.16'
+	developmentOnly 'org.springframework.boot:spring-boot-devtools'
+	runtimeOnly 'com.microsoft.sqlserver:mssql-jdbc'
+	annotationProcessor 'org.springframework.boot:spring-boot-configuration-processor'
+	annotationProcessor 'org.projectlombok:lombok'
+
+	providedCompile group: 'org.projectlombok', name: 'lombok', version: '1.18.2'
+	
+	implementation 'org.apache.tiles:tiles-api:3.0.5'
+	implementation 'org.apache.tiles:tiles-core:3.0.5'
+	implementation 'org.apache.tiles:tiles-jsp:3.0.5'
+	implementation 'org.apache.tiles:tiles-servlet:3.0.5'
+	
+	compile('org.apache.tomcat.embed:tomcat-embed-jasper')
+	compile('javax.servlet:jstl:1.2')
+    compile('org.apache.poi:poi-ooxml:3.13') // .xlsx
+    compile('org.apache.poi:poi:3.13') // .xls
+
+	compile group: 'commons-lang', name: 'commons-lang', version: '2.6'
+	compile group: 'org.apache.commons', name: 'commons-collections4', version: '4.4'
+
+	compile files('libs/NiceID.jar')
+	compile files('libs/simplecaptcha-1.2.1.jar')
+	
+	testImplementation('org.springframework.boot:spring-boot-starter-test') {
+		exclude group: 'org.junit.vintage', module: 'junit-vintage-engine'
+	}
+}
+
+test {
+	useJUnitPlatform()
+}
+
+ext.profile = (!project.hasProperty('profile') || !profile) ? 'dev' : profile
+
+sourceSets {
+	main {
+		resources {
+			srcDirs "src/main/resources", "src/main/resources-env/${profile}"
+		}
+	}
+}

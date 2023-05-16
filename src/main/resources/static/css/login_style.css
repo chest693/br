@@ -1,0 +1,151 @@
+@charset "utf-8";
+/* CSS Document */
+
+@import url(https://fonts.googleapis.com/earlyaccess/notosanskr.css);
+body,p,h1,h2,h3,h4,h5,h6,ul,ol,li,dl,dt,dd,table,th,td,form,fieldset,legend,input,textarea,button,select{margin:0;padding:0}
+body {font-family:'Noto Sans KR', sans-serif; font-size:12px; color:#000; word-break:keep-all}
+input,textarea,select,button,table{font-size:12px;font-weight:normal;}
+dt,dd {line-height:160%;font-weight:normal;text-align:left}
+table {border-collapse:collapse}
+th,td {font-weight:normal;text-align:left}
+td div{line-height:normal; border:0}
+td input, td img{vertical-align:middle}
+img,fieldset{border:none}
+img{vertical-align:top}
+ul,ol{list-style:none}
+em,address{font-style:normal}
+a {color:#396a94;text-decoration:none}
+a:hover,a:active,a:focus{color:#fc2c0a}
+label input{margin-right:3px;margin-top:-3px;vertical-align:middle}
+button {border:0px; cursor:pointer} 
+
+h1 {font-size:31px; color:#000; margin: 0 auto; padding:0 0 15px 0; text-align:center; position: relative; top:0px;}
+
+h1 span{color: #ed1b23;}
+
+#wrapper {min-width:100%; position:relative; background-image:url(/images/bg_main.jpg); background-repeat:repeat;}
+
+.login-page {
+  width: 633px;
+  padding: 8% 0 0;
+  margin: auto;
+}
+
+.form {
+  position: relative;
+  z-index: 1;
+ background-image:url(/images/bg_donation_01.png);
+  background-repeat:no-repeat;
+  max-width: 633px;
+  height:368px;
+  margin: 0 auto 100px;
+  padding: 45px;
+}
+.form input {
+  font-family: "Roboto", sans-serif;
+  outline: 0;
+  background: #fff;
+  width: 70%;
+  border: 0;
+  margin: 0  0 9px 0;
+  padding: 18px;
+  box-sizing: border-box;
+  font-size: 14px;
+}
+.form button {
+	display:block;
+	position:absolute;
+	top:130px;
+	right:62px;
+	height:119px;
+	border-radius:5px; 
+	font-size:14px;
+	font-weight:700;
+	color:#fff;
+	line-height:60px;
+	text-align:center;
+	background:#ed1b23;
+	}
+	
+.form button:hover,.form button:active,.form button:focus {
+  background: #43A047;
+}
+.form .message {
+  margin: 15px 0 0;
+  color: #b3b3b3;
+  font-size: 12px;
+}
+.form .message a {
+  color: #4CAF50;
+  text-decoration: none;
+}
+.form .register-form {
+  display: none;
+}
+.container {
+  position: relative;
+  z-index: 1;
+  max-width: 300px;
+  margin: 0 auto;
+}
+.container:before, .container:after {
+  content: "";
+  display: block;
+  clear: both;
+}
+.container .info {
+  margin: 50px auto;
+  text-align: center;
+}
+.container .info h1 {
+  margin: 0 0 15px;
+  padding: 0;
+  font-size: 36px;
+  font-weight: 300;
+  color: #1a1a1a;
+}
+.container .info span {
+  color: #4d4d4d;
+  font-size: 12px;
+}
+.container .info span a {
+  color: #000000;
+  text-decoration: none;
+}
+.container .info span .fa {
+  color: #EF3B3A;
+}
+
+
+#.wrap_footer {position:relative; border-top:3px solid #c3c3c3;background-image:url(/images/bg_main.jpg); background-repeat:no-repeat; margin-top:-100px; clear:both}
+wrapper {min-width:100%; position:relative; background-image:url(/images/bg_main.jpg); background-repeat:no-repeat;}
+.footer .top {position:absolute; top:0; right:-145px; background:#ccc; z-index:1000}
+.footer {position:relative; width:1200px; margin:0 auto; font:normal 12px dotum; padding:0}
+.footer .f_menu {height:50px}
+.footer .f_menu li {float:left}
+.footer .f_menu li a {display:inline-block; height:50px; line-height:50px; color:#000; padding:0 17px}
+.footer .f_menu li a:hover {color:#fc2c0a}
+.footer .contact {margin:20px 0 50px; overflow:hidden}
+.footer .contact .mobile, .contact .company_info, .contact .cu_center {height:190px}
+.footer .contact .mobile {float:left; width:225px; color:#888; padding-left:13px; padding-top:15px; line-height:130%}
+.footer .contact .mobile img {margin:10px 0 25px}
+.footer .contact .mobile a {color:#888}
+.footer .contact .mobile a:hover {color:#fc2c0a}
+.footer .contact .mobile .sns {margin-top:5px}
+.footer .contact .mobile .sns a {display:inline-block; width:22px; height:22px; background:url(/images/ico_sns.png) no-repeat; margin-right:7px}
+.footer .contact .mobile .sns a.twitter {background-position:0 0}
+.footer .contact .mobile .sns a.facebook {background-position:-34px 0}
+.footer .contact .mobile .sns a.tistory {background-position:-67px 0}
+.footer .contact .company_info {float:left; width:700px; padding:15px 0 20px 25px; color:#888; line-height:140%;}
+.footer .contact .company_info h5 {font:bold 12px dotum; height:20px; color:#606060}
+.footer .contact .company_info h5.red {color:#fc2c0a; margin-top:25px}
+.footer .contact .company_info a {display:inline-block; padding:5px 7px 3px; background:#ddd; color:#888; font:bold 12px dotum}
+.footer .contact .cu_center {float: right; width:250px; color:#888; line-height:160%; padding-top:15px; padding-left:25px}
+.footer .contact .cu_center h4 {font:bold 19px Noto Sans KR; color:#000}
+.footer .contact .cu_center .tel {font:bold 28px 'Noto Sans KR'; color:#fc2c0a; margin:0 0 10px}
+.footer .contact .cu_center .txt_underline {margin-bottom:10px}
+.footer .contact .cu_center .txt_underline strong {text-decoration:underline;}
+.footer .contact .cu_center .red {color:#fc2c0a; font-weight:bold}
+.footer .contact .cu_center a {color:#606060; font-weight:bold}
+.footer .contact .cu_center a:hover {color:#fc2c0a}
+

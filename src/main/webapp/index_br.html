@@ -1,0 +1,69 @@
+<!------------------------------------------------------------------------
+HTML start
+-------------------------------------------------------------------------->
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html>
+<head>
+<link rel="shortcut icon" href="/images/favicon.ico">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta http-equiv="content-type" content="text/html; charset=utf-8">
+<title>사랑의 열매</title>
+<!------------------------------------------------------------------------
+Local Java Script
+-------------------------------------------------------------------------->
+<script language="javascript">
+//<!CDADA[
+    // isOK
+    function isOk() {
+        //return "/index.html";
+    	return "/";
+    }
+
+    function get_version_of_IE () { 
+   	 var word; 
+   	 var version = "N/A"; 
+   	 var agent = navigator.userAgent.toLowerCase(); 
+   	 var name = navigator.appName;
+
+   	if (agent.indexOf("chrome") != -1) return 'Chrome'; 
+   	if (agent.indexOf("firefox") != -1) return 'Firefox'; 
+   	if (agent.indexOf("safari") != -1) return 'Safari'; 
+   	  
+   	 // IE old version ( IE 10 or Lower ) 
+   	 if ( name == "Microsoft Internet Explorer" ) word = "msie "; 
+   	 else { 
+   		 // IE 11 
+   		 if ( agent.search("trident") > -1 ) word = "trident/.*rv:"; 
+   		 // Microsoft Edge  
+   		 else if ( agent.search("edge/") > -1 ) word = "edge/"; 
+   	 } 
+   	 var reg = new RegExp( word + "([0-9]{1,})(\\.{0,}[0-9]{0,1})" ); 
+   	 if (  reg.exec( agent ) != null  ) version = RegExp.$1 + RegExp.$2; 
+   	 return version; 
+   } 
+
+    window.onload = function(){
+    	/*
+        var versionMsg = get_version_of_IE(); 
+        if(versionMsg=="Chrome" || versionMsg=="Firefox" || versionMsg=="Safari"){
+			alert("사용중이신 "+versionMsg+"브라우져는 사용이 원활하지 않으실 수 있습니다.\n원활한 사용을 위해서는 Internet Explorer 10이상 버젼을 사용해주십시요.");
+        } else {
+            if(parseInt(versionMsg) < 11){
+				alert("사용중이신 브라우져는 Internet Explorer "+versionMsg+" 입니다.\n원활한 사용을 위해서는 Explorer 11 버젼을 사용해주십시요.");
+            }	
+        } 
+        */
+    }
+
+
+//]]>
+</script>
+</head>
+<frameset id="fsTop" rows="0, *" border="0">
+    <frame src="" name="fNone" scrolling="no">
+    <!--  
+    <frame src="/login"    name="fContents" scrolling="yes">
+    -->
+    <frame src="/notice.html"    name="fContents" scrolling="yes">
+</frameset>
+</html>

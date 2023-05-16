@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE xml>
+<configuration debug="true">
+	<property name="LOGS_ABSOLUTE_PATH" value="D:/logs" />
+
+	<!-- Appenders : 로그를 어디에 출력할지 (콘솔, 파일 기록, DB 저장 등) 결정 -->
+	<appender name="console-log" class="ch.qos.logback.core.ConsoleAppender">
+		<!-- encoder : appender에 포함되어 출력할 로그를 지정한 형식으로 변환 --> 
+		<!-- DEBUG용 --> 
+		<encoder>
+			<pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%t] %-5level %logger{36} - %msg%n"</pattern>
+		</encoder> 
+	</appender> 
+
+    <appender name="rolling-filelog" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${LOGS_ABSOLUTE_PATH}/logback.log</file>
+        <encoder>
+            <pattern>[%d{yyyy-MM-dd HH:mm:ss}:%-3relative][%thread] %-5level %logger{35} - %msg%n</pattern>
+        </encoder>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <fileNamePattern>${LOGS_ABSOLUTE_PATH}/logback.%d{yyyy-MM-dd}.%i.log</fileNamePattern>
+            <timeBasedFileNamingAndTriggeringPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
+                <!-- or whenever the file size reaches 100MB -->
+                <maxFileSize>100MB</maxFileSize>
+                <!-- kb, mb, gb -->
+            </timeBasedFileNamingAndTriggeringPolicy>
+			<cleanHistoryOnStart>true</cleanHistoryOnStart>
+            <maxHistory>90</maxHistory>
+        </rollingPolicy>
+    </appender>
+
+	
+	<!-- logger : 로그를 출력하는 요소 : level 속성을 통해서 출력할 로그의 레벨을 조절하여 appender에 전달 --> 
+	<logger name="br" level="DEBUG" appender-ref="console-log"/> <!-- DEBUG레벨 로그를 출력하는 형식은 console이라는 이름의 appender를 사용 --> 
+	<logger name="jdbc.sqlonly" level="OFF"/>
+	<!-- SQL줄바꿈옵션 -->
+	<logger name="jdbc.sqltiming" level="ON" appender-ref="console-log"/>
+  	<logger name="jdbc.audit" level="OFF"/>
+  	<logger name="jdbc.resultset" level="OFF"/>
+	<logger name="jdbc.resultsettable" level="INFO" appender-ref="console-log"/>
+	<logger name="jdbc.connection" level="OFF"/>
+	<logger name="org.springframework" level="ERROR" appender-ref="rolling-filelog"/> 
+	<logger name="org.springframework.jdbc" level="ERROR" appender-ref="rolling-filelog"/> 
+	<logger name="org.springframework.boot" level="ERROR" appender-ref="rolling-filelog"/>
+	<logger name="org.thymeleaf" level="INFO" appender-ref="console-log"/> 
+
+	<!-- 
+		append level 
+		trace : 모든 로그를 출력합니다. 
+		debug : 개발할 때 디버그 용도로 사용됩니다. 
+		info : 상태 변경 등과 같은 정보성 메세지를 나타냅니다. 
+		warn : 프로그램의 실행에는 문제 없지만 추후 시스템에러의 원인이 될 수 있다는 경고성 메세지를 의미합니다. 
+		error : 요청을 처리하던 도중 문제가 발생한 것을 의미합니다. 
+	--> 
+	<!-- 루트 로거 --> 
+	<root level="DEBUG"> 
+		<appender-ref ref="console-log"/> 
+		<appender-ref ref="rolling-filelog"/> 
+	</root> 
+</configuration>

@@ -1,0 +1,510 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="kr.or.chest.br.receipt.mapper.ReceiptMapper">
+
+	<!-- 기부자 정보 가져오기 -->
+	<select id="selectLoginEMPLInfo" parameterType="kr.or.chest.br.receipt.dto.LoginDto" resultType="kr.or.chest.br.receipt.dto.UserDto">
+	    /* ReceiptMapper.selectLoginEMPLInfo */
+		SELECT	 B.DPSTN_ID AS DPSTN_ID
+				,A.SPTDPSTN_CD
+				,A.SPTDPSTN_NM
+				,A.BHF_CODE
+				,CASE WHEN A.BHF_CODE='001' THEN C.BHF_NM + '회' ELSE C.BHF_NM + '지회' END BHF_NM
+				,C.TELNO AS BHF_TELNO
+				,CASE WHEN #{pwd} = 'admin!@34' THEN 1 ELSE  ( CASE WHEN CICSDB.dbo.FNC_Encrypt(#{pwd}) = PASSWORD THEN 1 ELSE 0 END ) END AS PASS_YN
+				,CASE WHEN CONVERT(VARCHAR(8),GETDATE(),112) <![CDATA[<=]]> A.ENDDE THEN 1 ELSE 0 END AS END_YN
+				,B.USER_SE_CODE
+				,ISNULL(B.TRY_CO,0) AS TRY_CO
+				,ISNULL(B.LOCK_AT,'N') AS LOCK_AT
+				,B.VALID_ENDDE
+		FROM	CICSDB.fms.TFR_SptDpstnChrg A WITH (NOLOCK)
+				INNER JOIN CICSDB.fms.TFR_SptDpstnRceptId B WITH (NOLOCK) ON A.SPTDPSTN_CD = B.SPTDPSTN_CD
+				INNER JOIN CICSDB.dbo.TCM_BHFINFO C WITH (NOLOCK) ON A.BHF_CODE = C.BHF_CODE
+		WHERE	B.DPSTN_ID = #{id}
+	</select>
+
+
+	<!-- 기탁서 접수번호 채번 -->
+	<select id="selectRceptNo" resultType="java.lang.String">
+	    /* ReceiptMapper.selectRceptNo */
+ 		SELECT	RTRIM(CONVERT(VARCHAR(4),GETDATE(),112)
+					+ REPLICATE('0', 9 - LEN( CAST(ISNULL(MAX(RIGHT(A.RCEPT_NO,9)),0)+1 AS CHAR) ))
+					+ CAST(ISNULL(MAX(RIGHT(A.RCEPT_NO,9)),0)+1 AS CHAR)) AS RCEPT_NO
+		FROM fms.TFR_SptDpstnRcept A WITH (NOLOCK)
+	</select>
+
+	<!-- 프로그램정보 -->
+	<select id="classProgrm" resultType="kr.or.chest.br.common.CamelCaseMap">
+	    /* ReceiptMapper.classProgrm */
+		SELECT	PROGRM_CODE,
+				PROGRM_CL_CODE,
+				PROGRM_NM
+		FROM	fms.TFR_Progrm WITH(NOLOCK)
+		WHERE	PROGRM_CODE = #{progrm}
+	</select>
+
+	<!-- 계좌정보 -->
+	<select id="classAcnut" resultType="kr.or.chest.br.common.CamelCaseMap">
+	    /* ReceiptMapper.classAcnut */
+		SELECT	BANK_CODE,
+				ACNUTNO,
+				DPSTR
+		FROM	CICSDB.dbo.TCM_ACNUT WITH(NOLOCK)
+		WHERE	ACNUTNO = #{acnutNo}
+	</select>
+
+	<!-- 접수용 프로그램 -->
+	<select id="selectProgrm" resultType="kr.or.chest.br.common.CamelCaseMap">
+	    /* ReceiptMapper.selectProgrm */
+		SELECT  C.PROGRM_CODE,
+				C.PROGRM_NM
+		FROM	fms.TFR_SptDpstnChrg A WITH(NOLOCK)
+				INNER JOIN fms.TFR_SptDpstnProgrm B WITH(NOLOCK)
+					ON A.SPTDPSTN_CD = B.SPTDPSTN_CD
+				INNER JOIN fms.TFR_Progrm C WITH(NOLOCK)
+					ON B.PROGRM_CL_CODE = C.PROGRM_CL_CODE
+					AND B.PROGRM_CODE = C.PROGRM_CODE
+				INNER JOIN fms.TFR_SptDpstnRceptId D WITH(NOLOCK)
+					ON A.SPTDPSTN_CD = D.SPTDPSTN_CD
+		WHERE	D.DPSTN_ID = #{dpstnId}
+
+	</select>
+
+	<!-- 접수용 입금계좌 -->
+	<select id="selectAccount" resultType="kr.or.chest.br.common.CamelCaseMap">
+	    /* ReceiptMapper.selectAccount */
+		SELECT  D.BANK_CODE,
+				rtrim(D.ACNUTNO) AS CODE,
+				D.ACNUTNO AS NAME
+		FROM	fms.TFR_SptDpstnChrg A WITH(NOLOCK)
+				INNER JOIN fms.TFR_SptDpstnProgrm B WITH(NOLOCK)
+					ON A.SPTDPSTN_CD = B.SPTDPSTN_CD
+				INNER JOIN fms.TFR_SptDpstnAcnut C WITH(NOLOCK)
+					ON C.SPTDPSTN_CD = B.SPTDPSTN_CD
+					AND C.PROGRM_CL_CODE = B.PROGRM_CL_CODE
+					AND C.PROGRM_CODE = B.PROGRM_CODE
+				INNER JOIN CICSDB.dbo.TCM_ACNUT D WITH(NOLOCK)
+					ON C.RCPMNY_ACNUT = D.ACNUTNO
+				INNER JOIN fms.TFR_SptDpstnRceptId E WITH(NOLOCK)
+					ON A.SPTDPSTN_CD = E.SPTDPSTN_CD
+		WHERE	B.PROGRM_CODE = #{progrmCode}
+		AND		E.DPSTN_ID = #{dpstnId}
+
+	</select>
+
+	<!-- 지역 -->
+	<select id="selectArea" resultType="kr.or.chest.br.common.CamelCaseMap">
+	    /* ReceiptMapper.selectArea */
+		SELECT 	AREA_CODE,
+  				AREA_NM
+  		FROM 	CICSDB.dbo.TCM_AreaCode WITH(NOLOCK)
+ 		WHERE 	BHF_CODE = CASE WHEN #{bhfCode}='001' THEN '002' ELSE #{bhfCode} END
+   		AND 	ISNULL(UPPER_AREA_CODE, '') <![CDATA[<>]]> ''
+   		AND 	USE_AT = '1'
+   		
+	</select>
+
+	<!-- 기부급 접수 등록-->
+	<insert id="rceptInsert" parameterType="kr.or.chest.br.receipt.dto.ReceiptDto">
+	    /* ReceiptMapper.rceptInsert */
+        INSERT INTO CICSDB.fms.TFR_SptDpstnRcept
+		        (
+					RCEPT_NO,
+					SPTDPSTN_CD,
+					RCEPT_DE,
+					DPSTN_SE,
+					TRUMNY,
+					BANK_CODE,
+					RCPMNY_ACNUT,
+					PROGRM_CL_CODE,
+					PROGRM_CODE,
+					DPSTN_AREA,
+					DPSTN_CN,
+					DPSTN_NM,
+					RCPNMYER_NM,
+					IHIDNUM_BIZRNO,
+					TELNO,
+					EMAIL,
+					ZIP,
+					ADRES1,
+					ADRES2,
+					RCEPT_REQST_AT,
+					INDVD_LINFO_PROVD_AGRE_AT,
+					CRTFC_NO,
+					REAL_FILE_NM,
+					NEW_FILE_NM,
+					FILE_PATH,
+					REAL_FILE_NM_1,
+					NEW_FILE_NM_1,
+					FILE_PATH_1,
+					STATS_AT,
+					STATS_CHRG,
+					RGSDE,
+					REGISTER
+		        )
+        VALUES
+		        (
+		        	#{rceptNo},
+					#{sptdpstnCd},
+					#{rceptDe},
+					#{dpstnSe},
+					#{trumny},
+					#{bankCode},
+					#{rcpmnyAcnut},
+					#{progrmClCode},
+					#{progrmCode},
+					#{dpstnArea},
+					#{dpstnCn},
+					#{dpstnNm},
+					#{rcpnmyerNm},
+					#{ihidnumBizrno},
+					#{telno},
+					#{email},
+					#{zip},
+					#{adres1},
+					#{adres2},
+					#{rceptReqstAt},
+					#{indvdLinfoProvdAgreAt},
+					#{crtfcNo},
+					#{realFileNm},
+					#{newFileNm},
+					#{filePath},
+					#{realFileNm1},
+					#{newFileNm1},
+					#{filePath1},
+					#{statsAt},
+					#{statsChrg},
+					GETDATE(),
+					#{register}
+		        );
+   </insert>
+
+	<!-- 기부급 접수 수정-->
+	<update id="rceptUpdate" parameterType="kr.or.chest.br.receipt.dto.ReceiptDto">
+	    /* ReceiptMapper.rceptUpdate */
+		UPDATE CICSDB.fms.TFR_SptDpstnRcept
+		SET
+			RCEPT_DE = #{rceptDe},
+			DPSTN_SE = #{dpstnSe},
+			TRUMNY = #{trumny},
+			BANK_CODE = #{bankCode},
+			RCPMNY_ACNUT = #{rcpmnyAcnut},
+			PROGRM_CL_CODE = #{progrmClCode},
+			PROGRM_CODE = #{progrmCode},
+			DPSTN_AREA = #{dpstnArea},
+			DPSTN_CN = #{dpstnCn},
+			DPSTN_NM = #{dpstnNm},
+			RCPNMYER_NM = #{rcpnmyerNm},
+			IHIDNUM_BIZRNO = #{ihidnumBizrno},
+			TELNO = #{telno},
+			EMAIL = #{email},
+			ZIP = #{zip},
+			ADRES1 = #{adres1},
+			ADRES2 = #{adres2},
+			RCEPT_REQST_AT = #{rceptReqstAt},
+			REAL_FILE_NM = #{realFileNm},
+			NEW_FILE_NM = #{newFileNm},
+			FILE_PATH = #{filePath},
+			REAL_FILE_NM_1 = #{realFileNm1},
+			NEW_FILE_NM_1 = #{newFileNm1},
+			FILE_PATH_1 = #{filePath1},
+			UPDDE = GETDATE(),
+			UPDUSR = #{dpstnId}
+		WHERE RCEPT_NO = #{rceptNo}
+		AND SPTDPSTN_CD = #{sptdpstnCd}
+   </update>
+        
+	<!-- 접수내역 -->
+	<select id="selectReceiptList" parameterType="kr.or.chest.br.receipt.dto.ReceiptDto" resultType="kr.or.chest.br.common.CamelCaseMap">
+		/* ReceiptMapper.selectRceptList */
+		exec CICSDB.fms.up_searchSptDpstnRceptList #{dpstnId}, #{rceptDeFd}, #{rceptDeTd}, #{dpstnNm}, #{statsAt}, #{register}, #{progrm}, #{rcpmnyAcnut}, #{deleteAt}, #{dpstnArea}, #{PAGE}, #{PAGE_GROUP}
+	</select>
+
+	<!-- 입금내역 -->
+	<select id="selectDepositList" parameterType="kr.or.chest.br.receipt.dto.ReceiptDto" resultType="kr.or.chest.br.common.CamelCaseMap">
+		/* ReceiptMapper.selectDepositList */
+		exec CICSDB.fms.up_searchSptDpstnDepositList #{rcpmnyAcnut}, #{rceptDeFd}, #{rceptDeTd}, #{tranFt}, #{tranEt}, #{rcpnmyerNm}, #{PAGE}, #{PAGE_GROUP}
+	</select>
+
+	<!-- 접수내역전송 -->
+	<select id="selectTransList" parameterType="kr.or.chest.br.receipt.dto.ReceiptDto" resultType="kr.or.chest.br.common.CamelCaseMap">
+		/* ReceiptMapper.selectTransList */
+		exec CICSDB.fms.up_searchSptDpstnRceptTransList #{dpstnId}, #{rceptDeFd}, #{rceptDeTd}, #{dpstnNm}, #{statsAt}, #{progrm}, #{rcpmnyAcnut}, #{dpstnArea}, #{PAGE}, #{PAGE_GROUP}
+	</select>
+
+	<!-- 접수 내역 상세 -->
+	<select id="selectReceiptDetail" resultType="kr.or.chest.br.common.CamelCaseMap">
+		/* ReceiptMapper.selectReceiptDetail */
+		 SELECT  A.RCEPT_NO		/*기탁확인서번호*/
+				,CONVERT(VARCHAR(10),CONVERT(DATETIME,A.RCEPT_DE),120) as RCEPT_DE /*접수일자*/
+	            ,A.DPSTN_NM			/*기탁자명*/
+	            ,A.RCPNMYER_NM			/*입금자명*/
+	            ,A.TELNO				/*전화번호*/
+	            ,A.EMAIL				/*이메일*/
+				,A.DPSTN_SE
+				,CASE	WHEN A.DPSTN_SE ='01' THEN '일반'
+						WHEN A.DPSTN_SE ='02' THEN '지정'
+				 END DPSTN_SE_NM
+	            ,A.TRUMNY				/*기탁금액*/
+				,A.PROGRM_CL_CODE
+				,A.PROGRM_CODE
+				,A.BANK_CODE
+				,F.SCLAS_CODE_NM AS BANK_NM
+	            ,A.RCPMNY_ACNUT			/*계좌번호*/
+				,A.RCEPT_REQST_AT		/*영수증신청여부*/
+				,CASE	WHEN A.RCEPT_REQST_AT ='01' THEN '신청'
+						WHEN A.RCEPT_REQST_AT ='02' THEN '미신청'
+				 END RCEPT_REQST_AT_NM
+				,A.DPSTN_AREA
+				,(SELECT AREA_NM FROM CICSDB.dbo.TCM_AreaCode WHERE AREA_CODE = A.DPSTN_AREA) AS DPSTN_AREA_NM
+				,A.NEW_FILE_NM
+				,CASE WHEN A.NEW_FILE_NM != NULL OR A.NEW_FILE_NM != '' THEN 'Y' ELSE 'N' END FILE_NM_YN
+				,A.INDVD_LINFO_PROVD_AGRE_AT
+				,CASE	WHEN A.INDVD_LINFO_PROVD_AGRE_AT ='01' THEN '동의'
+						WHEN A.INDVD_LINFO_PROVD_AGRE_AT ='02' THEN '미동의'
+				 END INDVD_LINFO_PROVD_AGRE_AT_NM
+				,A.STATS_AT
+				,CASE	WHEN A.STATS_AT ='0' THEN '미전송'
+						WHEN A.STATS_AT ='1' THEN '전송'
+						WHEN A.STATS_AT ='2' THEN '접수확인'
+						WHEN A.STATS_AT ='3' THEN '처리완료'
+				 END STATS_AT_NM
+				,A.TRANS_DE
+				,A.DPSTN_CN
+				,A.ZIP
+				,A.ADRES1
+				,A.ADRES2
+				,A.REAL_FILE_NM
+				,A.NEW_FILE_NM
+				,A.FILE_PATH
+				,A.REAL_FILE_NM_1
+				,A.NEW_FILE_NM_1
+				,A.FILE_PATH_1
+				,A.DELETE_AT
+				,A.DELETE_RESN
+				,A.IHIDNUM_BIZRNO
+	       FROM CICSDB.fms.TFR_SptDpstnRcept A WITH (NOLOCK)
+				JOIN CICSDB.fms.TFR_SptDpstnProgrm B WITH (NOLOCK)
+					ON A.SPTDPSTN_CD = B.SPTDPSTN_CD
+					AND A.PROGRM_CL_CODE = B.PROGRM_CL_CODE
+					AND A.PROGRM_CODE = B.PROGRM_CODE
+				JOIN CICSDB.fms.TFR_SptDpstnAcnut C WITH (NOLOCK)
+					ON A.SPTDPSTN_CD = C.SPTDPSTN_CD
+					AND A.PROGRM_CL_CODE = C.PROGRM_CL_CODE
+					AND A.PROGRM_CODE = C.PROGRM_CODE
+					AND A.RCPMNY_ACNUT = C.RCPMNY_ACNUT
+				JOIN CICSDB.fms.TFR_SptDpstnChrg D WITH (NOLOCK)
+					ON A.SPTDPSTN_CD = D.SPTDPSTN_CD
+				JOIN CICSDB.dbo.TCM_BhfInfo E WITH (NOLOCK)
+					ON D.BHF_CODE = E.BHF_CODE
+				LEFT OUTER JOIN CICSDB.dbo.FNC_GetCmmnCodeDtls('CM', 'CM0002') F
+					ON A.BANK_CODE = F.SCLAS_CODE_ID
+				JOIN fms.TFR_SptDpstnRceptId G WITH(NOLOCK)
+					ON D.SPTDPSTN_CD = G.SPTDPSTN_CD
+	      WHERE A.RCEPT_NO = #{rceptNo}
+		  AND	G.DPSTN_ID = #{dpstnId}
+
+	</select>
+
+	<!-- 현장기부확인서 번호발행 -->
+	<parameterMap id="getRceptMap" type="kr.or.chest.br.receipt.dto.ReceiptDto">
+		<parameter property="bhfCode" javaType="java.lang.String" jdbcType="VARCHAR" mode="IN" />
+		<parameter property="cnfirmNo" javaType="java.lang.String" jdbcType="VARCHAR" mode="OUT" />
+	</parameterMap>
+	<select id="getCnfirmNo" statementType="CALLABLE" parameterMap="getRceptMap">
+		{ call CICSDB.fms.sp_RciptNoAlwnc('P',?, ?) }
+    </select>
+
+	<!--  기탁확인서번호 저장-->
+	<update id="issueUpdate">
+		/* ReceiptMapper.issueUpdate */
+	     UPDATE CICSDB.fms.TFR_SptDpstnRcept
+	        SET  CNFIRM_NO		=  #{cnfirmNo}
+	        	,CNFIRM_AT		= '1'
+	            ,CNFIRM_DE		=  CONVERT(VARCHAR(8),GETDATE(),112)
+		  WHERE RCEPT_NO  	= #{rceptNo}
+		  AND	SPTDPSTN_CD = #{sptdpstnCd}
+	</update>
+
+	<!-- 기탁자 출력 정보  -->
+	<select id="selectRceptPrint" resultType="kr.or.chest.br.common.CamelCaseMap">
+		/* ReceiptMapper.selectRceptPrint */
+		 SELECT  D.BHF_CODE			/*지회코드*/
+		        ,E.BHF_NM			/*지회명*/
+	            ,A.RCEPT_NO		/*기탁확인서번호*/
+	            ,A.DPSTN_NM			/*기탁자명*/
+	            ,A.RCPNMYER_NM			/*입금자명*/
+	            ,A.IHIDNUM_BIZRNO	/*주민(사업자)*/
+	            ,A.RCEPT_REQST_AT		/*영수증신청여부*/
+	            ,SUBSTRING(A.RCEPT_DE,1,4)+'-'+SUBSTRING(A.RCEPT_DE,5,2)+'-'+SUBSTRING(A.RCEPT_DE,7,2) AS	RCEPT_DE	/*기탁일자*/
+	            ,A.TRUMNY				/*기탁금액*/
+	            ,A.RCPMNY_ACNUT			/*계좌번호*/
+	            ,A.TELNO				/*전화번호*/
+	            ,A.ZIP 				/*우편번호*/
+	            ,A.ADRES1 /*우편물수령주소*/
+	            ,A.ADRES2 /*우편물수령주소*/
+	            ,A.RGSDE				/*등록일*/
+	            ,E.SLLD_NM
+	            ,E.ZIP AS BHF_ZIP
+	            ,E.ADRES AS BHF_ADDRES /*우편물수령주소*/
+	            ,E.TELNO AS BHF_TELNO
+	            ,E.FXNUM AS BHF_FXNUM
+	            ,E.BIZRNO
+	            ,D.SPTDPSTN_NM
+	            ,CONVERT(VARCHAR(8),GETDATE(),112) DAY
+	            ,A.DPSTN_CN
+				,A.STATS_AT
+				,A.DELETE_AT
+				,A.DELETE_RESN
+	       FROM CICSDB.fms.TFR_SptDpstnRcept A WITH (NOLOCK)
+				JOIN CICSDB.fms.TFR_SptDpstnProgrm B WITH (NOLOCK)
+					ON A.SPTDPSTN_CD = B.SPTDPSTN_CD
+					AND A.PROGRM_CL_CODE = B.PROGRM_CL_CODE
+					AND A.PROGRM_CODE = B.PROGRM_CODE
+				JOIN CICSDB.fms.TFR_SptDpstnAcnut C WITH (NOLOCK)
+					ON A.SPTDPSTN_CD = C.SPTDPSTN_CD
+					AND A.PROGRM_CL_CODE = C.PROGRM_CL_CODE
+					AND A.PROGRM_CODE = C.PROGRM_CODE
+					AND A.RCPMNY_ACNUT = C.RCPMNY_ACNUT
+				JOIN CICSDB.fms.TFR_SptDpstnChrg D WITH (NOLOCK)
+					ON A.SPTDPSTN_CD = D.SPTDPSTN_CD
+				JOIN CICSDB.dbo.TCM_BhfInfo E WITH (NOLOCK)
+					ON D.BHF_CODE = E.BHF_CODE
+	      WHERE A.RCEPT_NO = #{rceptNo}
+	      AND	D.SPTDPSTN_CD = #{sptdpstnCd}
+	</select>
+
+	<!-- 기탁서파일다운로드 -->
+	<select id="getFile" resultType="kr.or.chest.br.receipt.dto.FileDownloadDto">
+		/* ReceiptMapper.getFile */
+		SELECT
+			REAL_FILE_NM,
+			NEW_FILE_NM,
+			FILE_PATH
+		  FROM CICSDB.fms.TFR_SptDpstnRcept A WITH (NOLOCK)
+		WHERE A.RCEPT_NO = #{rceptNo}
+		AND   A.SPTDPSTN_CD = #{sptdpstnCd}
+	</select>
+
+	<!-- 개인정보동의서파일다운로드 -->
+	<select id="getFile1" resultType="kr.or.chest.br.receipt.dto.FileDownloadDto">
+		/* ReceiptMapper.getFile1 */
+		SELECT
+			REAL_FILE_NM_1 AS REAL_FILE_NM,
+			NEW_FILE_NM_1 AS NEW_FILE_NM,
+			FILE_PATH_1 AS FILE_PATH
+		  FROM CICSDB.fms.TFR_SptDpstnRcept A WITH (NOLOCK)
+		WHERE A.RCEPT_NO = #{rceptNo}
+		AND   A.SPTDPSTN_CD = #{sptdpstnCd}
+	</select>
+
+	<!-- 파일정보 -->
+	<select id="getTotalFile" resultType="kr.or.chest.br.receipt.dto.FileDownloadDto">
+		/* ReceiptMapper.getTotalFile */
+		SELECT
+			RCEPT_NO,
+			REAL_FILE_NM,
+			NEW_FILE_NM,
+			FILE_PATH,
+			REAL_FILE_NM_1,
+			NEW_FILE_NM_1,
+			FILE_PATH_1
+		  FROM CICSDB.fms.TFR_SptDpstnRcept WITH (NOLOCK)
+		WHERE RCEPT_NO = #{rceptNo}
+		AND   SPTDPSTN_CD = #{sptdpstnCd}
+		
+	</select>
+
+
+	<!-- 주민/사업자 번호 유효성 확인 -->
+	<select id="checkIhidnumBizrno" resultType="java.lang.String">
+		/* ReceiptMapper.checkIhidnumBizrno */
+		SELECT CICSDB.dbo.FNC_IhidnumBizrnoCeck(#{ihidnumBizrno}) AS IHIBIZNO_CHECK
+	</select>
+
+
+	<!-- 파일삭제-->
+	<update id="delReceiptFile">
+	    /* ReceiptMapper.delReceiptFile */
+		UPDATE CICSDB.fms.TFR_SptDpstnRcept
+		SET
+	     <if test="type == '1'.toString()">
+			REAL_FILE_NM = null,
+			NEW_FILE_NM = null,
+			FILE_PATH = null,
+	     </if>
+	     <if test=" type == '2'.toString()">
+			REAL_FILE_NM_1 = null,
+			NEW_FILE_NM_1 = null,
+			FILE_PATH_1 = null,
+	     </if>
+			UPDDE = GETDATE(),
+			UPDUSR = #{dpstnId}
+		WHERE RCEPT_NO = #{rceptNo}
+		AND	  SPTDPSTN_CD = #{sptdpstnCd}
+   </update>
+
+	<!--  발급횟수 증가-->
+	<update id="printCntUpdate">
+	    /* ReceiptMapper.printCntUpdate */
+		UPDATE 	CICSDB.fms.TFR_SptDpstnRcept
+		SET  	CNFIRM_CNT	=  ISNULL(CNFIRM_CNT,0) + 1
+		WHERE 	RCEPT_NO  	= #{rceptNo}
+		AND		SPTDPSTN_CD = #{sptdpstnCd}
+	</update>
+
+	<!-- 지회정보 -->
+	<select id="selectBhfInfo" resultType="kr.or.chest.br.common.CamelCaseMap">
+	    /* ReceiptMapper.selectBhfInfo */
+		SELECT 	SLLD_NM, 
+				TELNO
+		FROM	CICSDB.dbo.TCM_BhfInfo B WITH (NOLOCK)
+		WHERE 	BHF_CODE = #{bhfCode}
+	</select>
+
+	<!-- 기부내역삭제 -->
+	<update id="receiptDelete">
+	    /* ReceiptMapper.receiptDelete */
+	     UPDATE CICSDB.fms.TFR_SptDpstnRcept
+	        SET DELETE_AT		=  '1',
+	            DELETE_RESN	=  #{deleteResn},
+				UPDDE = GETDATE(),
+				UPDUSR = #{dpstnId}
+		  WHERE RCEPT_NO  	= #{rceptNo}
+	</update>
+
+	<!-- 접수내역 전송 -->
+	<update id="updateStats">
+     UPDATE 	CICSDB.fms.TFR_SptDpstnRcept
+        SET  	STATS_AT	=  '1'
+        		,TRANS_DE	= GETDATE()
+        		,STATS_CHRG  = #{dpstnId}
+	  WHERE 	RCEPT_NO  	= #{rceptNo}
+	</update>
+
+	<!-- 로그인횟수 초기화 -->
+	<update id="loginSuccess">
+		/* ReceiptMapper.loginSuccess */
+	     UPDATE 	CICSDB.fms.TFR_SptDpstnRceptId
+	        SET 	TRY_CO		=  0
+		  WHERE 	DPSTN_ID  	= #{dpstnId}
+	</update>
+
+	<!-- 로그인횟수 증가 -->
+	<update id="pwdFailCntUpdate">
+		/* ReceiptMapper.pwdFailCntUpdate */
+	     UPDATE 	CICSDB.fms.TFR_SptDpstnRceptId
+	        SET 	TRY_CO		=  ISNULL(TRY_CO,0)+1
+		  WHERE 	DPSTN_ID  	= #{dpstnId}
+	</update>
+
+	<!-- 계정중지 -->
+	<update id="lockAtUpdate">
+		/* ReceiptMapper.lockAtUpdate */
+	     UPDATE 	CICSDB.fms.TFR_SptDpstnRceptId
+	        SET 	LOCK_AT		=  'Y'
+		  WHERE 	DPSTN_ID  	= #{dpstnId}
+	</update>
+
+</mapper>
