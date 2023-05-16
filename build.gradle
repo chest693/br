@@ -11,7 +11,7 @@ war {
 }
 
 group = 'kr.or.chest'
-version = '0.0.1'
+version = 'ROOT'
 sourceCompatibility = '1.8'
 
 configurations {
